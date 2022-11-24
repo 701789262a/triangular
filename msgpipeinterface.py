@@ -87,6 +87,7 @@ def pipe_server():
                         params['signature'] = hmac.new(y['secret'].encode('utf-8'), query_string.encode('utf-8'),
                                                        hashlib.sha256).hexdigest()
 
+
                         r = requests.post('https://api.binance.com/sapi/v1/loan/borrow', headers=headers, params=params)
                         if 'coin' not in dict(json.loads(r.text)):
                             pushqueue.join(r.text + '\n')
