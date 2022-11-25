@@ -11,9 +11,6 @@ import numpy
 import requests
 import unicorn_binance_websocket_api
 from binance.client import Client
-import pywintypes
-import win32file
-import win32pipe
 import time
 
 
@@ -38,25 +35,24 @@ def pipe_server():
         lotsize[symbol['symbol'] + 'buy'] = int(symbol['quotePrecision'])
     loop_list = []
     print("pipe server")
-    pipe = win32pipe.CreateNamedPipe(
-        r'\\.\pipe\PIPE',
-        win32pipe.PIPE_ACCESS_DUPLEX,
-        win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_READMODE_MESSAGE | win32pipe.PIPE_WAIT,
-        1, 65536, 65536,
-        0,
-        None)
-    try:
-        print("waiting for client")
-        win32pipe.ConnectNamedPipe(pipe, None)
-        print("got client")
+    FIFO = 'looppipe'
+    print("waiting for client")
+    while True:
+        try:
+            fifo = open(FIFO,'r')
 
+            print("got client")
+            break
+        except Exception as e:
+            pass
+    try:
         while True:
             try:
-                resp = win32file.ReadFile(pipe, 64 * 1024)
-                dict_response = dict(eval(resp[1].decode()))
+                resp = fifo.read()
+                dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])
-                print('Message: %s | Loop Length: %d' % (resp[1].decode(), len(loop_list)))
+                print('Message: %s | Loop Length: %d' % (resp, len(loop_list)))
 
                 if float(dict_response['margin']) > 0:
                     pushqueue=""
@@ -115,16 +111,16 @@ def pipe_server():
                     except TypeError:
                         print('impossibile effettuare loan')
                     with open('logpositive', 'a') as f:
-                        f.write(resp[1].decode() + '\n')
+                        f.write(resp + '\n')
                         f.write(response.text + '\n')
 
             except Exception as e:
                 with open('errorqueue', 'a') as f:
                     f.write(str(traceback.format_exc()))
-                win32file.CloseHandle(pipe)
+                fifo.close()
                 pipe_server()
     finally:
-        win32file.CloseHandle(pipe)
+        fifo.close()
 
 
 if __name__ == "__main__":

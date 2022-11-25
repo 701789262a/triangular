@@ -1,4 +1,5 @@
 import asyncio
+import errno
 import logging
 import os
 import socket
@@ -12,9 +13,6 @@ import traceback
 
 import matplotlib.pyplot as plt
 import networkx
-import pywintypes
-import win32file
-import win32pipe
 from networkx import Graph, DiGraph, simple_cycles
 import numpy
 import tabloo
@@ -89,31 +87,18 @@ def returncoinlist(exchangeinfo):
     return list(set(partial_list))
 
 def pipe_client():
+    FIFO = 'looppipe'
     print("pipe client")
     quit = False
 
     while not quit:
         try:
-            handle = win32file.CreateFile(
-                r'\\.\pipe\PIPE',
-                win32file.GENERIC_READ | win32file.GENERIC_WRITE,
-                0,
-                None,
-                win32file.OPEN_EXISTING,
-                0,
-                None
-            )
-            res = win32pipe.SetNamedPipeHandleState(handle, win32pipe.PIPE_READMODE_MESSAGE, None, None)
-            if res == 0:
-                print(f"SetNamedPipeHandleState return code: {res}")
-            return handle
-        except pywintypes.error as e:
-            if e.args[0] == 2:
-                print("no pipe, trying again in a sec")
-                time.sleep(1)
-            elif e.args[0] == 109:
-                print("broken pipe, bye bye")
-                quit = True
+            os.mkfifo(FIFO)
+            fifo = open(FIFO,'w')
+            return fifo
+        except OSError as oe:
+            if oe.errno != errno.EEXIST:
+                raise
 
 def triangle_calculator(df,graph,pairlist,bookdepthdf):
     handle = pipe_client()
@@ -163,7 +148,7 @@ def loop_calculator(df,loop,pairlist,handle,bookdepthdf):
                         margin-= 0.00075
         print("Loop %s Margin %f%%"%(str(loop),margin*100))
         api_message_push = {'loop':pairs,'margin':round(margin*100,5),'prices':prices,'depths':depths,'timestamp':int(datetime.datetime.now().timestamp())}
-        win32file.WriteFile(handle, str.encode(str(api_message_push)))
+        handle.write(str(api_message_push))
     except Exception as e:
         with open('culo.txt','a') as f:
             f.write(str(traceback.format_exc()))
