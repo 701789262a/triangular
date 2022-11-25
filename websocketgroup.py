@@ -90,12 +90,13 @@ def pipe_client():
 
     while not quit:
         try:
-            os.mkfifo(FIFO)
             fifo = open(FIFO,'w')
             return fifo
         except OSError as oe:
             if oe.errno != errno.EEXIST:
                 raise
+        except Exception:
+            continue
 
 def triangle_calculator(df,graph,pairlist,bookdepthdf):
     handle = pipe_client()
