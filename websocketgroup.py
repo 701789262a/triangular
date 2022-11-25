@@ -39,9 +39,6 @@ def main():
         f.close()
     api_key = y['api']
     api_secret = y['secret']
-    with open("trade.yaml") as f:
-        t = yaml.safe_load(f)
-        f.close()
     pairlist = []
     client = Client(api_key, api_secret)
     exchange_info = client.get_exchange_info()['symbols']
@@ -68,7 +65,7 @@ def main():
     print(len(pairlist))
     bnb_wss_taker = Thread(target=
                            threaded_func,
-                           args=(tab, t, pairlist, graph,bookdepthdf))
+                           args=(tab,pairlist, graph,bookdepthdf))
     bnb_wss_taker.start()
     pairlist = []
     i = 0
@@ -191,7 +188,7 @@ def subscribe_wss(api_manager, pairlist):
     api_manager.create_stream(channels=['bookTicker'],markets=stream)
 
 
-def threaded_func(df, t, pairlist, graph,bookdepthdf):
+def threaded_func(df, pairlist, graph,bookdepthdf):
     print('Starting WSS connection')
     binance_websocket_api_manager = unicorn_binance_websocket_api.BinanceWebSocketApiManager(exchange="binance.com")
     withoutpoint_topoint = dict()
