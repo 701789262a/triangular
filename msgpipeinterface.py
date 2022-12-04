@@ -57,6 +57,7 @@ def pipe_server():
                     print(resp)
                     dict_response = dict(eval(resp))
                 except SyntaxError:
+                    time.sleep(1)
                     continue
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])
