@@ -37,7 +37,11 @@ def pipe_server():
     print("pipe server")
     FIFO = 'looppipe12'
     print("waiting for client")
-    os.mkfifo(FIFO)
+    try:
+        os.mkfifo(FIFO)
+    except FileExistsError:
+        os.system('rm %s'%FIFO)
+        os.mkfifo(FIFO)
     fifo = open(FIFO,'r')
     try:
         while True:
