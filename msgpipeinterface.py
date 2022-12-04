@@ -49,14 +49,14 @@ def pipe_server():
     fifo = os.open(FIFO,os.O_RDONLY | os.O_NONBLOCK)
     print('5')
     try:
+        print('starting read')
         while True:
             try:
                 try:
-                    print('starting read')
+                    resp = os.read(fifo, 300).decode().strip('\n')
+                    dict_response = dict(eval(resp))
                 except SyntaxError:
                     continue
-                resp = os.read(fifo,300).decode().strip('\n')
-                dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])
                 print('Message: %s | Loop Length: %d' % (resp, len(loop_list)))
