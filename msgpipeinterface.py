@@ -54,6 +54,7 @@ def pipe_server():
             try:
                 try:
                     resp = os.read(fifo, 300).decode().strip('\n')
+                    print(resp)
                     dict_response = dict(eval(resp))
                 except SyntaxError:
                     continue
