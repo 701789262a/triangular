@@ -39,10 +39,15 @@ def pipe_server():
     print("waiting for client")
     try:
         os.mkfifo(FIFO)
+        print('1')
     except FileExistsError:
         os.system('rm %s'%FIFO)
+        print('2')
         os.mkfifo(FIFO)
+        print('3')
+    print('4')
     fifo = open(FIFO,'r')
+    print('5')
     try:
         while True:
             try:
