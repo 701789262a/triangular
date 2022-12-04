@@ -38,10 +38,7 @@ def pipe_server():
     FIFO = 'looppipe12'
     print("waiting for client")
     os.mkfifo(FIFO)
-    while True:
-        fifo = open(FIFO,'r')
-        if fifo.read()!="":
-            break
+    fifo = open(FIFO,'r')
     try:
         while True:
             try:
