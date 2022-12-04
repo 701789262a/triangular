@@ -33,7 +33,7 @@ FEE = 1.00075
 zero_trading_fee_promo = ['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'USDCUSDT', 'USDPBUSD', 'USDPUSDT']
 bitcoin_trading_fee_promo =['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'USDCUSDT', 'USDPBUSD', 'USDPUSDT']
 
-FIFO = 'looppipe'
+FIFO = 'looppipe12'
 def main():
     with open("api.yaml") as f:
         y = yaml.safe_load(f)

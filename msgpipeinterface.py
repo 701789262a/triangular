@@ -35,9 +35,8 @@ def pipe_server():
         lotsize[symbol['symbol'] + 'buy'] = int(symbol['quotePrecision'])
     loop_list = []
     print("pipe server")
-    FIFO = 'looppipe'
+    FIFO = 'looppipe12'
     print("waiting for client")
-    os.system('rm %s'%FIFO)
     os.mkfifo(FIFO)
     while True:
         fifo = open(FIFO,'r')
