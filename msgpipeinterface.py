@@ -51,7 +51,10 @@ def pipe_server():
     try:
         while True:
             try:
-                print('starting read')
+                try:
+                    print('starting read')
+                except SyntaxError:
+                    continue
                 resp = os.read(fifo,300).decode().strip('\n')
                 dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
@@ -121,10 +124,10 @@ def pipe_server():
             except Exception as e:
                 with open('errorqueue', 'a') as f:
                     f.write(str(traceback.format_exc()))
-                fifo.close()
+                os.close(fifo)
                 pipe_server()
     finally:
-        fifo.close()
+        os.close(fifo)
 
 
 if __name__ == "__main__":
