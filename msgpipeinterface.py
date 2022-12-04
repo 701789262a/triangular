@@ -46,13 +46,13 @@ def pipe_server():
         os.mkfifo(FIFO)
         print('3')
     print('4')
-    fifo = open(FIFO,'r')
+    fifo = os.open(FIFO,os.O_RDONLY | os.O_NONBLOCK)
     print('5')
     try:
         while True:
             try:
                 print('starting read')
-                resp = fifo.read().strip('\n')
+                resp = os.read(fifo,300).decode().strip('\n')
                 dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])
