@@ -46,6 +46,7 @@ def pipe_server():
     try:
         while True:
             try:
+                print('starting read')
                 resp = fifo.read().strip('\n')
                 dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
