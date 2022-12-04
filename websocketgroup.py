@@ -33,6 +33,7 @@ FEE = 1.00075
 zero_trading_fee_promo = ['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'USDCUSDT', 'USDPBUSD', 'USDPUSDT']
 bitcoin_trading_fee_promo =['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'USDCUSDT', 'USDPBUSD', 'USDPUSDT']
 
+FIFO = 'looppipe'
 def main():
     with open("api.yaml") as f:
         y = yaml.safe_load(f)
@@ -83,23 +84,7 @@ def returncoinlist(exchangeinfo):
         partial_list.append(pair['quoteAsset'])
     return list(set(partial_list))
 
-def pipe_client():
-    FIFO = 'looppipe'
-    print("pipe client")
-    quit = False
-
-    while not quit:
-        try:
-            fifo = open(FIFO,'w')
-            return fifo
-        except OSError as oe:
-            if oe.errno != errno.EEXIST:
-                raise
-        except Exception:
-            continue
-
 def triangle_calculator(df,graph,pairlist,bookdepthdf):
-    handle = pipe_client()
     while True:
         print('graph2',graph)
         if not globalgraph.global_graph or globalgraph.global_graph!=graph:
@@ -116,9 +101,9 @@ def triangle_calculator(df,graph,pairlist,bookdepthdf):
         print("loops max 3 found",closed_loop_list)
         #loop_calculator(df,closed_loop_list[0],pairlist,handle)
         for loop in closed_loop_list:
-            Thread(target=loop_calculator,args=(df,loop,pairlist,handle,bookdepthdf)).start()
+            Thread(target=loop_calculator,args=(df,loop,pairlist,bookdepthdf)).start()
 
-def loop_calculator(df,loop,pairlist,handle,bookdepthdf):
+def loop_calculator(df,loop,pairlist,bookdepthdf):
     try:
         """['ETH', 'BTC', 'EUR']  =>  ["ETHBTC", "BTCEUR", "EURETH"]"""
         pairs = [[loop[0],loop[1]],[loop[1],loop[2]],[loop[2],loop[0]]]
@@ -146,7 +131,7 @@ def loop_calculator(df,loop,pairlist,handle,bookdepthdf):
                         margin-= 0.00075
         print("Loop %s Margin %f%%"%(str(loop),margin*100))
         api_message_push = {'loop':pairs,'margin':round(margin*100,5),'prices':prices,'depths':depths,'timestamp':int(datetime.datetime.now().timestamp())}
-        handle.write(str(api_message_push))
+        os.system('echo %s > %s'%(str(api_message_push),FIFO))
     except Exception as e:
         with open('culo.txt','a') as f:
             f.write(str(traceback.format_exc()))

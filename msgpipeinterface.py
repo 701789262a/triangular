@@ -37,6 +37,7 @@ def pipe_server():
     print("pipe server")
     FIFO = 'looppipe'
     print("waiting for client")
+    os.system('rm %s'%FIFO)
     os.mkfifo(FIFO)
     while True:
         fifo = open(FIFO,'r')
@@ -45,7 +46,7 @@ def pipe_server():
     try:
         while True:
             try:
-                resp = fifo.read()
+                resp = fifo.read().strip('\n')
                 dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])
