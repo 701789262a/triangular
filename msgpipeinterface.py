@@ -46,14 +46,15 @@ def pipe_server():
         os.mkfifo(FIFO)
         print('3')
     print('4')
-    fifo = os.open(FIFO,os.O_RDONLY | os.O_NONBLOCK)
+    fifo = open(FIFO,'r')
     print('5')
     try:
         print('starting read')
         while True:
             try:
                 try:
-                    resp = os.read(fifo, 300).decode().strip()
+                    resp = fifo.read().strip('\n')
+
                     print(resp)
                     dict_response = dict(eval(resp))
                 except SyntaxError:
@@ -126,10 +127,10 @@ def pipe_server():
             except Exception as e:
                 with open('errorqueue', 'a') as f:
                     f.write(str(traceback.format_exc()))
-                os.close(fifo)
+                fifo.close()
                 pipe_server()
     finally:
-        os.close(fifo)
+        fifo.close()
 
 
 if __name__ == "__main__":
