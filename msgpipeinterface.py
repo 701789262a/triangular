@@ -53,7 +53,7 @@ def pipe_server():
         while True:
             try:
                 try:
-                    resp = os.read(fifo, 300).decode().strip('\n')
+                    resp = os.read(fifo, 300).decode().strip()
                     print(resp)
                     dict_response = dict(eval(resp))
                 except SyntaxError:
