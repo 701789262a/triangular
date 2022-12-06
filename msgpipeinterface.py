@@ -48,6 +48,7 @@ def pipe_server():
         while True:
             try:
                 resp = fifo.read().strip('\n')
+                print(resp)
                 dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])
