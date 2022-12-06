@@ -132,8 +132,9 @@ def loop_calculator(df,loop,pairlist,bookdepthdf):
         print("Loop %s Margin %f%%"%(str(loop),margin*100))
         api_message_push = {'loop':pairs,'margin':round(margin*100,5),'prices':prices,'depths':depths,'timestamp':int(datetime.datetime.now().timestamp())}
 
-        with open(FIFO) as f:
+        with open(FIFO,'w') as f:
             f.write(str(api_message_push))
+            f.close()
     except Exception as e:
         with open('culo.txt','a') as f:
             f.write(str(traceback.format_exc()))
