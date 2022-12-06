@@ -8,3 +8,4 @@ unicorn-binance-websocket-api
 python-binance
 polars
 vaex
+ipcqueue

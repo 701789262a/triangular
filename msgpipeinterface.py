@@ -12,7 +12,7 @@ import requests
 import unicorn_binance_websocket_api
 from binance.client import Client
 import time
-
+from ipcqueue import posixmq
 
 lotsize = {}
 
@@ -35,20 +35,14 @@ def pipe_server():
         lotsize[symbol['symbol'] + 'buy'] = int(symbol['quotePrecision'])
     loop_list = []
     print("pipe server")
-    FIFO = 'looppipe12'
+    FIFO = '/looppipe12'
     print("waiting for client")
-    try:
-        os.mkfifo(FIFO)
-    except FileExistsError:
-        os.system('rm %s'%FIFO)
-        os.mkfifo(FIFO)
-    fifo = open(FIFO,'r')
+    q=posixmq.Queue(FIFO)
     try:
         print('starting read')
         while True:
             try:
-                resp = fifo.read().strip('\n')
-                print(resp)
+                resp = str(q.get()).strip('\n')
                 dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])

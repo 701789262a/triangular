@@ -9,7 +9,7 @@ import queue
 import queue
 import time
 import traceback
-
+from ipcqueue import posixmq
 
 import matplotlib.pyplot as plt
 import networkx
@@ -33,7 +33,7 @@ FEE = 1.00075
 zero_trading_fee_promo = ['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'USDCUSDT', 'USDPBUSD', 'USDPUSDT']
 bitcoin_trading_fee_promo =['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'USDCUSDT', 'USDPBUSD', 'USDPUSDT']
 
-FIFO = 'looppipe12'
+FIFO = '/looppipe12'
 def main():
     with open("api.yaml") as f:
         y = yaml.safe_load(f)
@@ -70,11 +70,12 @@ def main():
     bnb_wss_taker.start()
     pairlist = []
     i = 0
+    q=posixmq.Queue(FIFO)
     Thread(target=df_displayer, args=(tab, graph)).start()
     Thread(target=grapher,args=(graph,)).start()
     time.sleep(100)
     print(real_pair_listed)
-    triangle_calculator(tab,graph, real_pair_listed,bookdepthdf)
+    triangle_calculator(tab,graph, real_pair_listed,q,bookdepthdf)
 
 
 def returncoinlist(exchangeinfo):
@@ -84,7 +85,7 @@ def returncoinlist(exchangeinfo):
         partial_list.append(pair['quoteAsset'])
     return list(set(partial_list))
 
-def triangle_calculator(df,graph,pairlist,bookdepthdf):
+def triangle_calculator(df,graph,pairlist,q,bookdepthdf):
     while True:
         print('graph2',graph)
         if not globalgraph.global_graph or globalgraph.global_graph!=graph:
@@ -101,9 +102,9 @@ def triangle_calculator(df,graph,pairlist,bookdepthdf):
         print("loops max 3 found",closed_loop_list)
         #loop_calculator(df,closed_loop_list[0],pairlist,handle)
         for loop in closed_loop_list:
-            Thread(target=loop_calculator,args=(df,loop,pairlist,bookdepthdf)).start()
+            Thread(target=loop_calculator,args=(df,loop,pairlist,q,bookdepthdf)).start()
 
-def loop_calculator(df,loop,pairlist,bookdepthdf):
+def loop_calculator(df,loop,pairlist,q,bookdepthdf):
     try:
         """['ETH', 'BTC', 'EUR']  =>  ["ETHBTC", "BTCEUR", "EURETH"]"""
         pairs = [[loop[0],loop[1]],[loop[1],loop[2]],[loop[2],loop[0]]]
@@ -132,9 +133,7 @@ def loop_calculator(df,loop,pairlist,bookdepthdf):
         print("Loop %s Margin %f%%"%(str(loop),margin*100))
         api_message_push = {'loop':pairs,'margin':round(margin*100,5),'prices':prices,'depths':depths,'timestamp':int(datetime.datetime.now().timestamp())}
 
-        with open(FIFO,'w') as f:
-            f.write(str(api_message_push))
-            f.close()
+        q.put(str(api_message_push))
     except Exception as e:
         with open('culo.txt','a') as f:
             f.write(str(traceback.format_exc()))
