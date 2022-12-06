@@ -46,7 +46,7 @@ def pipe_server():
                 dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])
-                print('Message: %s | Loop Length: %d' % (resp, len(loop_list)))
+                print('Msg: %s\n| Loop Length: %d | Queue length: %d' % (resp, len(loop_list), q.qsize()))
 
                 if float(dict_response['margin']) > 0:
                     pushqueue=""
@@ -111,10 +111,12 @@ def pipe_server():
             except Exception as e:
                 with open('errorqueue', 'a') as f:
                     f.write(str(traceback.format_exc()))
-                fifo.close()
+                q.close()
+                q.unlink()
                 pipe_server()
     finally:
-        fifo.close()
+        q.close()
+        q.unlink()
 
 
 if __name__ == "__main__":
