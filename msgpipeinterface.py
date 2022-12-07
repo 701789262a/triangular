@@ -107,6 +107,7 @@ def pipe_server():
                     with open('logpositive', 'a') as f:
                         f.write(resp + '\n')
                         f.write(response.text + '\n')
+                        exit()
 
             except Exception as e:
                 with open('errorqueue', 'a') as f:
