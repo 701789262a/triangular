@@ -15,7 +15,7 @@ import time
 from ipcqueue import posixmq
 
 lotsize = {}
-
+avgtime=[1]
 
 def pipe_server():
     with open("api.yaml") as f:
@@ -42,11 +42,12 @@ def pipe_server():
         print('starting read')
         while True:
             try:
+                start=datetime.datetime.now().timestamp()
                 resp = str(q.get()).strip('\n')
                 dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])
-                print('Msg: %s\n| Loop Length: %d | Queue length: %d' % (resp, len(loop_list), q.qsize()))
+                print('Msg: %s\n| Loop Length: %d | Queue length: %d | Msg rate: %.2f/s' % (resp, len(loop_list), q.qsize(),1/(sum(avgtime[:100])/100)))
 
                 if float(dict_response['margin']) > 0:
                     pushqueue=""
@@ -108,6 +109,9 @@ def pipe_server():
                         f.write(resp + '\n')
                         f.write(response.text + '\n')
                         exit()
+                finish=datetime.datetime.now().timestamp()
+                t=finish-start
+                avgtime.append(t)
 
             except Exception as e:
                 with open('errorqueue', 'a') as f:
@@ -119,6 +123,11 @@ def pipe_server():
         q.close()
         q.unlink()
 
+def instant_execute_trade(tradelist):
+    for trade in tradelist:
+        execute_trade(trade)
+def execute_trade(trade):
+    pass
 
 if __name__ == "__main__":
     pipe_server()
