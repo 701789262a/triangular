@@ -15,7 +15,7 @@ import time
 from ipcqueue import posixmq
 
 lotsize = {}
-avgtime=[1]
+avgtime=[0.0]
 
 def pipe_server():
     with open("api.yaml") as f:
@@ -47,7 +47,7 @@ def pipe_server():
                 dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])
-                print('Msg: %s\n| Loop Length: %d | Queue length: %d | Msg rate: %.2f/s' % (resp, len(loop_list), q.qsize(),1/(sum(avgtime[:100])/100)))
+                print('Msg: %s\n| Loop Length: %d | Queue length: %d | Msg rate: %.2f/s' % (resp, len(loop_list), q.qsize(),1/(sum(avgtime[-100:])/100)))
 
                 if float(dict_response['margin']) > 0:
                     pushqueue=""
