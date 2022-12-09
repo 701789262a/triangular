@@ -15,7 +15,7 @@ import time
 from ipcqueue import posixmq
 
 lotsize = {}
-avgtime=[0.0]
+avgtime=[1.0]
 
 def pipe_server():
     with open("api.yaml") as f:
