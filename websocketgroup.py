@@ -53,6 +53,7 @@ def main():
     graph = {} #grafo
     coinlist = returncoinlist(exchange_info)
     print(len(coinlist))
+    time.sleep(5)
     for coin1 in coinlist:
         tab[coin1] = {}
         bookdepthdf[coin1] = {}
@@ -71,7 +72,6 @@ def main():
     pairlist = []
     i = 0
     q=posixmq.Queue(FIFO)
-    Thread(target=df_displayer, args=(tab, graph)).start()
     Thread(target=grapher,args=(graph,)).start()
     time.sleep(100)
     print(real_pair_listed)
@@ -163,11 +163,6 @@ def grapher(graph):
         plt.show()
 
 
-def df_displayer(df, graph):
-    while True:
-        os.system('cls')
-        print(pd.DataFrame.from_dict(df))
-        time.sleep(0.2)
 
 
 def subscribe_wss(api_manager, pairlist):
