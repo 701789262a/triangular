@@ -1,5 +1,6 @@
 import asyncio
 import errno
+import gc
 import logging
 import os
 import socket
@@ -32,9 +33,10 @@ class globalgraph():
 FEE = 1.00075
 zero_trading_fee_promo = ['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'USDCUSDT', 'USDPBUSD', 'USDPUSDT']
 bitcoin_trading_fee_promo =['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'USDCUSDT', 'USDPBUSD', 'USDPUSDT']
-
+GCCOUNTER_TRESHOLD=60000
 FIFO = '/looppipe12'
 def main():
+    gc.enable()
     with open("api.yaml") as f:
         y = yaml.safe_load(f)
         f.close()
@@ -86,6 +88,7 @@ def returncoinlist(exchangeinfo):
     return list(set(partial_list))
 
 def triangle_calculator(df,graph,pairlist,q,bookdepthdf):
+    gccounter=0
     while True:
         print('graph2',graph)
         if not globalgraph.global_graph or globalgraph.global_graph!=graph:
@@ -102,8 +105,11 @@ def triangle_calculator(df,graph,pairlist,q,bookdepthdf):
         print("loops max 3 found",closed_loop_list)
         #loop_calculator(df,closed_loop_list[0],pairlist,handle)
         for loop in closed_loop_list:
+            gccounter+=1
             #Thread(target=loop_calculator,args=(df,loop,pairlist,q,bookdepthdf)).start()
             loop_calculator(df,loop,pairlist,q,bookdepthdf)
+        if gccounter>=GCCOUNTER_THRESHOLD:
+            gc.collect()
 
 def loop_calculator(df,loop,pairlist,q,bookdepthdf):
     try:
