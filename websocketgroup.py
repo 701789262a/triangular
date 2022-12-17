@@ -33,7 +33,7 @@ class globalgraph():
 FEE = 1.00075
 zero_trading_fee_promo = ['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'USDCUSDT', 'USDPBUSD', 'USDPUSDT']
 bitcoin_trading_fee_promo =['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'USDCUSDT', 'USDPBUSD', 'USDPUSDT']
-GCCOUNTER_TRESHOLD=60000
+GCCOUNTER_THRESHOLD=600000
 FIFO = '/looppipe12'
 def main():
     gc.enable()
