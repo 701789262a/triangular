@@ -44,7 +44,7 @@ def main():
     client = Client(api_key, api_secret)
     exchange_info = client.get_exchange_info()['symbols']
     real_pair_listed = [pair['symbol'] for pair in exchange_info]
-    exchange_info = exchange_info[:50]
+    exchange_info = exchange_info[:51]
     print(len(exchange_info))
     exchange_info = [item for item in exchange_info if 'EUR' not in item['symbol']]
     print(len(exchange_info))
@@ -102,7 +102,8 @@ def triangle_calculator(df,graph,pairlist,q,bookdepthdf):
         print("loops max 3 found",closed_loop_list)
         #loop_calculator(df,closed_loop_list[0],pairlist,handle)
         for loop in closed_loop_list:
-            Thread(target=loop_calculator,args=(df,loop,pairlist,q,bookdepthdf)).start()
+            #Thread(target=loop_calculator,args=(df,loop,pairlist,q,bookdepthdf)).start()
+            loop_calculator(df,loop,pairlist,q,bookdepthdf)
 
 def loop_calculator(df,loop,pairlist,q,bookdepthdf):
     try:
@@ -130,7 +131,7 @@ def loop_calculator(df,loop,pairlist,q,bookdepthdf):
                         margin-= 0
                     else:
                         margin-= 0.00075
-        print("Loop %s Margin %f%%"%(str(loop),margin*100))
+        print("Loop %s\t\tMargin %f%%"%(str(loop),margin*100))
         api_message_push = {'loop':pairs,'margin':round(margin*100,5),'prices':prices,'depths':depths,'timestamp':int(datetime.datetime.now().timestamp())}
 
         q.put(str(api_message_push))
