@@ -44,7 +44,7 @@ def main():
     client = Client(api_key, api_secret)
     exchange_info = client.get_exchange_info()['symbols']
     real_pair_listed = [pair['symbol'] for pair in exchange_info]
-    exchange_info = exchange_info[:51]
+    exchange_info = exchange_info[:50]
     print(len(exchange_info))
     exchange_info = [item for item in exchange_info if 'EUR' not in item['symbol']]
     print(len(exchange_info))
