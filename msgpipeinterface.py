@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import json
 import os
+from threading import Thread
 import errno
 import traceback
 from urllib.parse import urlencode
@@ -15,7 +16,9 @@ import time
 from ipcqueue import posixmq
 
 lotsize = {}
-avgtime=[1.0]
+avgtime = [1.0]
+ORDER_MARGIN_PRICE_VOLATILITY = 0.03
+
 
 def pipe_server():
     with open("api.yaml") as f:
@@ -36,22 +39,25 @@ def pipe_server():
     loop_list = []
     print("pipe server")
     FIFO = '/looppipe12'
+
     print("waiting for client")
-    q=posixmq.Queue(FIFO)
+    q = posixmq.Queue(FIFO)
+    p = posixmq.Queue("/orderpipe", maxsize=50)
     try:
         print('starting read')
         while True:
             try:
-                start=datetime.datetime.now().timestamp()
+                start = datetime.datetime.now().timestamp()
                 resp = str(q.get()).strip('\n')
                 dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])
-                print('Msg: %s\n| Loop Length: %d | Queue length: %d | Msg rate: %.2f/s' % (resp, len(loop_list), q.qsize(),1/(sum(avgtime[-100:])/100)))
+                print('Msg: %s\n| Loop Length: %d | Queue length: %d | Msg rate: %.2f/s' % (
+                resp, len(loop_list), q.qsize(), 1 / (sum(avgtime[-100:]) / 100)))
 
                 if float(dict_response['margin']) > 0:
-                    pushqueue=""
-                    start=datetime.datetime.now().timestamp()
+                    pushqueue = ""
+                    start = datetime.datetime.now().timestamp()
                     json_data = {
                         'collateralCoin': 'USDT',
                         'loanCoin': dict_response['loop'][0][0],
@@ -78,39 +84,28 @@ def pipe_server():
                         params['signature'] = hmac.new(y['secret'].encode('utf-8'), query_string.encode('utf-8'),
                                                        hashlib.sha256).hexdigest()
 
-
                         r = requests.post('https://api.binance.com/sapi/v1/loan/borrow', headers=headers, params=params)
                         if 'coin' not in dict(json.loads(r.text)):
-                            pushqueue.join(r.text + '\n')
-                            i = 0
-                            for pair in dict_response['loop']:
-                                if pair[0] + pair[1] in real_pair_listed:
-                                    pushqueue.join(str(round(borrowable_qty * 0.99999999,
-                                                          lotsize[pair[0] + pair[1] + 'sell'])) + '\n')
-                                    order = dict(client.order_market_sell(symbol=pair[0] + pair[1],
-                                                                          quantity=round(borrowable_qty * 0.99999999,
-                                                                                         lotsize[pair[0] + pair[1] + 'sell'])))
-                                    borrowable_qty = float(order['cummulativeQuoteQty'])
-                                else:
-                                    pushqueue.join(str(round(borrowable_qty * 0.99999999,
-                                                          lotsize[pair[1] + pair[0] + 'buy'])) + '\n')
-                                    order = dict(client.order_market_buy(symbol=pair[1] + pair[0],
-                                                                         quoteOrderQty=round(borrowable_qty * 0.99999999,
-                                                                                             lotsize[
-                                                                                                 pair[1] + pair[0] + 'buy'])))
-                                    borrowable_qty = float(order['executedQty'])
-                                i += 1
+                            instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, borrowable_qty)
+
                             print(r.text)
-                            end=datetime.datetime.now().timestamp()
-                            pushqueue.join('[!] took:'+str(end-start) + '\n')
+                            end = datetime.datetime.now().timestamp()
+                            pushqueue.join('[!] took:' + str(end - start) + '\n')
+
+                            msg = "newtrade\n"
+                            while p.qsize > 0:
+                                msg = msg + p.get() + '\n'
+
+                            with open('instantexecuteerrorlog', 'a') as f:
+                                f.write(msg)
                     except TypeError:
                         print('impossibile effettuare loan')
                     with open('logpositive', 'a') as f:
                         f.write(resp + '\n')
                         f.write(response.text + '\n')
                         exit()
-                finish=datetime.datetime.now().timestamp()
-                t=finish-start
+                finish = datetime.datetime.now().timestamp()
+                t = finish - start
                 avgtime.append(t)
 
             except Exception as e:
@@ -118,16 +113,57 @@ def pipe_server():
                     f.write(str(traceback.format_exc()))
                 q.close()
                 q.unlink()
+                p.close()
+                p.unlink()
                 pipe_server()
     finally:
         q.close()
         q.unlink()
 
-def instant_execute_trade(tradelist):
-    for trade in tradelist:
-        execute_trade(trade)
-def execute_trade(trade):
-    pass
+
+def instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, borrowable_qty):
+    prices = dict_response['prices']
+    k = 0
+    for pair in dict_response['loop']:
+        if pair[0] + pair[1] in real_pair_listed:
+            pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
+                                     lotsize[pair[0] + pair[1] + 'sell'])) + '\n')
+            Thread(target=executor_sell, args=(client, pair, borrowable_qty)).start()
+            borrowable_qty = borrowable_qty * prices[k]
+        else:
+            pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
+                                     lotsize[pair[1] + pair[0] + 'buy'])) + '\n')
+            Thread(target=executor_buy, args=(client, pair, borrowable_qty)).start()
+            borrowable_qty = borrowable_qty / prices[k]
+        k += 1
+
+
+def executor_buy(client, pair, borrowable_qty):
+    for j in range(100):
+        Thread(target=execute_trade, args=(client, pair, 'buy', borrowable_qty)).start()
+        time.sleep(0.01)
+
+
+def executor_sell(client, pair, borrowable_qty):
+    for j in range(100):
+        Thread(target=execute_trade, args=(client, pair, 'sell', borrowable_qty)).start()
+        time.sleep(0.01)
+
+
+def execute_trade(client, pair, side, borrowable_qty):
+    q = posixmq.Queue('/orderpipe')
+    if side == 'sell':
+        order = dict(client.order_market_sell(symbol=pair[0] + pair[1],
+                                              quantity=round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
+                                                             lotsize[pair[0] + pair[1] + 'sell'])))
+        q.put(str(order))
+    else:
+        order = dict(client.order_market_buy(symbol=pair[1] + pair[0],
+                                             quoteOrderQty=round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
+                                                                 lotsize[
+                                                                     pair[1] + pair[0] + 'buy'])))
+        q.put(str(order))
+
 
 if __name__ == "__main__":
     pipe_server()
