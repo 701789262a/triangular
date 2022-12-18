@@ -153,12 +153,12 @@ def executor_sell(client, pair, borrowable_qty):
 def execute_trade(client, pair, side, borrowable_qty):
     q = posixmq.Queue('/orderpipe')
     if side == 'sell':
-        order = dict(client.order_market_sell(symbol=pair[0] + pair[1],
+        order = dict(client.order_market_sell(symbol=pair[0] + pair[1],recvWindow=30000,
                                               quantity=round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
                                                              lotsize[pair[0] + pair[1] + 'sell'])))
         q.put(str(order))
     else:
-        order = dict(client.order_market_buy(symbol=pair[1] + pair[0],
+        order = dict(client.order_market_buy(symbol=pair[1] + pair[0],recvWindow=30000,
                                              quoteOrderQty=round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
                                                                  lotsize[
                                                                      pair[1] + pair[0] + 'buy'])))
