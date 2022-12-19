@@ -7,6 +7,8 @@ from threading import Thread
 import errno
 import traceback
 from urllib.parse import urlencode
+
+import binance.exceptions
 import yaml
 import numpy
 import requests
@@ -140,30 +142,32 @@ def instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, bo
 
 def executor_buy(client, pair, borrowable_qty):
     for j in range(16):
-        Thread(target=execute_trade, args=(client, pair, 'buy', borrowable_qty)).start()
+        Thread(target=execute_trade, args=(client, pair, 'buy', borrowable_qty,j)).start()
         time.sleep(0.1)
 
 
 def executor_sell(client, pair, borrowable_qty):
     for j in range(16):
-        Thread(target=execute_trade, args=(client, pair, 'sell', borrowable_qty)).start()
+        Thread(target=execute_trade, args=(client, pair, 'sell', borrowable_qty,j)).start()
         time.sleep(0.1)
 
 
-def execute_trade(client, pair, side, borrowable_qty):
+def execute_trade(client, pair, side, borrowable_qty,i):
     q = posixmq.Queue('/orderpipe')
-    if side == 'sell':
-        order = dict(client.order_market_sell(symbol=pair[0] + pair[1],recvWindow=30000,
-                                              quantity=round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
-                                                             lotsize[pair[0] + pair[1] + 'sell'])))
-        q.put(str(order))
-    else:
-        order = dict(client.order_market_buy(symbol=pair[1] + pair[0],recvWindow=30000,
-                                             quoteOrderQty=round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
-                                                                 lotsize[
-                                                                     pair[1] + pair[0] + 'buy'])))
-        q.put(str(order))
-
+    try:
+        if side == 'sell':
+            order = dict(client.order_market_sell(symbol=pair[0] + pair[1],recvWindow=30000,
+                                                  quantity=round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
+                                                                 lotsize[pair[0] + pair[1] + 'sell'])))
+            q.put(str(order))
+        else:
+            order = dict(client.order_market_buy(symbol=pair[1] + pair[0],recvWindow=30000,
+                                                 quoteOrderQty=round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
+                                                                     lotsize[
+                                                                         pair[1] + pair[0] + 'buy'])))
+            q.put(str(order))
+    except binance.exceptions.BinanceAPIException:
+        print('[!] No balance or err %s-%d'%(str(pair),i))
 
 if __name__ == "__main__":
     pipe_server()
