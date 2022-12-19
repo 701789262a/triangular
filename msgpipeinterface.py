@@ -139,13 +139,13 @@ def instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, bo
 
 
 def executor_buy(client, pair, borrowable_qty):
-    for j in range(100):
+    for j in range(16):
         Thread(target=execute_trade, args=(client, pair, 'buy', borrowable_qty)).start()
-        time.sleep(0.01)
+        time.sleep(0.05)
 
 
 def executor_sell(client, pair, borrowable_qty):
-    for j in range(100):
+    for j in range(16):
         Thread(target=execute_trade, args=(client, pair, 'sell', borrowable_qty)).start()
         time.sleep(0.01)
 
