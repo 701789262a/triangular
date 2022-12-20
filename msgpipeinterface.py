@@ -127,20 +127,47 @@ def pipe_server():
 def instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, borrowable_qty):
     prices = dict_response['prices']
     k = 0
-    print("[#] Loop length %d"%len(dict_response['loop']))
-    for pair in dict_response['loop']:
-        print('[#]Current pair %s'%str(pair))
-        if pair[0] + pair[1] in real_pair_listed:
-            pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
-                                     lotsize[pair[0] + pair[1] + 'sell'])) + '\n')
-            Thread(target=executor_sell, args=(client, pair, borrowable_qty)).start()
-            borrowable_qty = borrowable_qty * prices[k]
-        else:
-            pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
-                                     lotsize[pair[1] + pair[0] + 'buy'])) + '\n')
-            Thread(target=executor_buy, args=(client, pair, borrowable_qty)).start()
-            borrowable_qty = borrowable_qty / prices[k]
-        k += 1
+    pair = dict_response['loop'][0]
+    print('[#]Current pair %s' % str(pair))
+    if pair[0] + pair[1] in real_pair_listed:
+        pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
+                                 lotsize[pair[0] + pair[1] + 'sell'])) + '\n')
+        Thread(target=executor_sell, args=(client, pair, borrowable_qty)).start()
+        borrowable_qty = borrowable_qty * prices[k]
+    else:
+        pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
+                                 lotsize[pair[1] + pair[0] + 'buy'])) + '\n')
+        Thread(target=executor_buy, args=(client, pair, borrowable_qty)).start()
+        borrowable_qty = borrowable_qty / prices[k]
+    k+=1
+
+    pair = dict_response['loop'][1]
+    print('[#]Current pair %s' % str(pair))
+    if pair[0] + pair[1] in real_pair_listed:
+        pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
+                                 lotsize[pair[0] + pair[1] + 'sell'])) + '\n')
+        Thread(target=executor_sell, args=(client, pair, borrowable_qty)).start()
+        borrowable_qty = borrowable_qty * prices[k]
+    else:
+        pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
+                                 lotsize[pair[1] + pair[0] + 'buy'])) + '\n')
+        Thread(target=executor_buy, args=(client, pair, borrowable_qty)).start()
+        borrowable_qty = borrowable_qty / prices[k]
+    k += 1
+
+    pair = dict_response['loop'][2]
+    print('[#]Current pair %s' % str(pair))
+    if pair[0] + pair[1] in real_pair_listed:
+        pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
+                                 lotsize[pair[0] + pair[1] + 'sell'])) + '\n')
+        Thread(target=executor_sell, args=(client, pair, borrowable_qty)).start()
+        borrowable_qty = borrowable_qty * prices[k]
+    else:
+        pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
+                                 lotsize[pair[1] + pair[0] + 'buy'])) + '\n')
+        Thread(target=executor_buy, args=(client, pair, borrowable_qty)).start()
+        borrowable_qty = borrowable_qty / prices[k]
+    k += 1
 
 
 def executor_buy(client, pair, borrowable_qty):
