@@ -126,7 +126,7 @@ def pipe_server():
 def instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, borrowable_qty):
     prices = dict_response['prices']
     k = 0
-    print("[#] Loop length %d"%len(dict_response))
+    print("[#] Loop length %d"%len(dict_response['loop']))
     for pair in dict_response['loop']:
         if pair[0] + pair[1] in real_pair_listed:
             pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
