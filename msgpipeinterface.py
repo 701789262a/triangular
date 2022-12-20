@@ -105,6 +105,7 @@ def pipe_server():
                     with open('logpositive', 'a') as f:
                         f.write(resp + '\n')
                         f.write(response.text + '\n')
+                        time.sleep(10)
                         exit()
                 finish = datetime.datetime.now().timestamp()
                 t = finish - start
