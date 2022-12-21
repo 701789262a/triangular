@@ -22,7 +22,7 @@ avgtime = [1.0]
 ORDER_MARGIN_PRICE_VOLATILITY = 0.03
 
 
-async def pipe_server():
+def pipe_server():
     with open("api.yaml") as f:
         y = yaml.safe_load(f)
         f.close()
@@ -118,7 +118,7 @@ async def pipe_server():
                 q.unlink()
                 p.close()
                 p.unlink()
-                await pipe_server()
+                pipe_server()
     finally:
         q.close()
         q.unlink()
@@ -197,4 +197,4 @@ def execute_trade(client, pair, side, borrowable_qty,i):
         print('[!] No balance or err %s-%d'%(str(pair),i))
 
 if __name__ == "__main__":
-    await pipe_server()
+    pipe_server()
