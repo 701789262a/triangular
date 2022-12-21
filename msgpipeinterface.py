@@ -134,7 +134,7 @@ def instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, bo
         pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
                                  lotsize[pair[0] + pair[1] + 'sell'])) + '\n')
         Thread(target=executor_sell, args=(client, pair, borrowable_qty)).start()
-        borrowable_qty = borrowable_qty * prices[k]
+        borrowable_qty = borrowable_qty * float(prices[k])
     else:
         pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
                                  lotsize[pair[1] + pair[0] + 'buy'])) + '\n')
@@ -162,12 +162,12 @@ def instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, bo
         pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
                                  lotsize[pair[0] + pair[1] + 'sell'])) + '\n')
         Thread(target=executor_sell, args=(client, pair, borrowable_qty)).start()
-        borrowable_qty = borrowable_qty * prices[k]
+        borrowable_qty = borrowable_qty * float(prices[k])
     else:
         pushqueue.join(str(round(borrowable_qty * (1 - ORDER_MARGIN_PRICE_VOLATILITY),
                                  lotsize[pair[1] + pair[0] + 'buy'])) + '\n')
         Thread(target=executor_buy, args=(client, pair, borrowable_qty)).start()
-        borrowable_qty = borrowable_qty / prices[k]
+        borrowable_qty = borrowable_qty / float(prices[k])
     k += 1
 
 
