@@ -88,8 +88,9 @@ def pipe_server():
 
                         r = requests.post('https://api.binance.com/sapi/v1/loan/borrow', headers=headers, params=params)
                         if 'coin' not in dict(json.loads(r.text)):
-                            await instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, borrowable_qty)
-
+                            t=Thread(target=instant_execute_trade,args=(client, real_pair_listed, dict_response, pushqueue, borrowable_qty))
+                            t.start()
+                            t.join()
                             print(r.text)
                             end = datetime.datetime.now().timestamp()
                             pushqueue.join('[!] took:' + str(end - start) + '\n')
@@ -124,7 +125,7 @@ def pipe_server():
         q.unlink()
 
 
-async def instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, borrowable_qty):
+def instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, borrowable_qty):
     prices = dict_response['prices']
     k = 0
     pair = dict_response['loop'][0]
