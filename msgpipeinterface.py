@@ -197,4 +197,4 @@ def execute_trade(client, pair, side, borrowable_qty,i):
         print('[!] No balance or err %s-%d'%(str(pair),i))
 
 if __name__ == "__main__":
-    pipe_server()
+    await pipe_server()
