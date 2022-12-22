@@ -90,6 +90,10 @@ def returncoinlist(exchangeinfo):
 def triangle_calculator(df,graph,pairlist,q,bookdepthdf):
     gccounter=0
     while True:
+        if q.qsize() > 5:
+            print('[!] Queue getting full! Waiting 2 secs...')
+            time.sleep(2)
+            continue
         print('graph2',graph)
         if not globalgraph.global_graph or globalgraph.global_graph!=graph:
             G = Graph(graph)
