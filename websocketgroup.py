@@ -96,6 +96,7 @@ def triangle_calculator(df,graph,pairlist,q,bookdepthdf):
             continue
         print('graph2',graph)
         if not globalgraph.global_graph or globalgraph.global_graph!=graph:
+            print("[!] Redrawing graph...")
             G = Graph(graph)
             labels = dict(zip(G.nodes(), G.nodes()))
             networkx.draw_networkx(G, labels=labels)
