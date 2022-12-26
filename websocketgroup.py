@@ -1,32 +1,19 @@
-import asyncio
-import errno
 import gc
-import logging
-import os
-import socket
 import json
-import sys
-import queue
 import queue
 import time
 import traceback
 from ipcqueue import posixmq
-
+import math
 import matplotlib.pyplot as plt
 import networkx
 from networkx import Graph, DiGraph, simple_cycles
 import numpy
-import tabloo
-import pandas as pd
 import yaml
-import numpy as np
 import unicorn_binance_websocket_api
 from binance.client import Client
 from threading import Thread
 import datetime
-import polars as pl
-import vaex as vx
-from pandas import DataFrame
 class globalgraph():
     global_graph=False
     global_circular=[]
@@ -127,7 +114,7 @@ def loop_calculator(df,loop,pairlist,q,bookdepthdf):
             if isfloat(df[pair[0]][pair[1]]):
                 print("Testing",pair[0]+pair[1])
                 if pair[0]+pair[1] in pairlist:
-                    margin += np.log(float(df[pair[1]][pair[0]]))
+                    margin += math.log(float(df[pair[1]][pair[0]]))
                     depths.append(bookdepthdf[pair[1]][pair[0]])
                     prices.append(df[pair[1]][pair[0]])
                     if pair[0]+pair[1] in zero_trading_fee_promo or pair[1]+pair[0] in zero_trading_fee_promo or pair[0]+pair[1] in bitcoin_trading_fee_promo or pair[1]+pair[0] in bitcoin_trading_fee_promo:
@@ -135,7 +122,7 @@ def loop_calculator(df,loop,pairlist,q,bookdepthdf):
                     else:
                         margin-= 0.00075
                 else:
-                    margin += -np.log(float(df[pair[1]][pair[0]]))
+                    margin += -math.log(float(df[pair[1]][pair[0]]))
                     depths.append(bookdepthdf[pair[1]][pair[0]])
                     prices.append(df[pair[1]][pair[0]])
                     if pair[0]+pair[1] in zero_trading_fee_promo or pair[1]+pair[0] in zero_trading_fee_promo or pair[0]+pair[1] in bitcoin_trading_fee_promo or pair[1]+pair[0] in bitcoin_trading_fee_promo:
