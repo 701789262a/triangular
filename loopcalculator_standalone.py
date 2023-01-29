@@ -24,8 +24,7 @@ def main():
         pairlist = message['pairlist']
         df = message['df']
         bookdepthdf = message['bookdepthdf']
-        with open('men', 'a') as f:
-            f.write(str(df))
+        df = df.replace("'",'"').replace("nan",'"a"')
         print(loop)
         result = loop_calculator(df,loop,pairlist,bookdepthdf)
         socket1.send(result)
