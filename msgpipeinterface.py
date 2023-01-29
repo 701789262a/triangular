@@ -24,7 +24,7 @@ ORDER_MARGIN_PRICE_VOLATILITY = 0.03
 
 
 def pipe_server():
-    os.system('python loopcalculator_standalone.py')
+    os.system('python3 loopcalculator_standalone.py')
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
     socket.connect("tcp://localhost:5556")
