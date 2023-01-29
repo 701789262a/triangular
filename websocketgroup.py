@@ -101,8 +101,8 @@ class globalgraph():
                 gccounter+=1
                 #Thread(target=loop_calculator,args=(df,loop,pairlist,q,bookdepthdf)).start()
                 #push su queue
-                json_part = {'loop':str(loop),
-                             'pairlist':str(pairlist),
+                json_part = {'loop':loop,
+                             'pairlist':pairlist,
                              'df':str(df),
                              'bookdepthdf': str(bookdepthdf)}
                 q.send(str(json.dumps(json_part)).encode())

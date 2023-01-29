@@ -22,10 +22,12 @@ def main():
         message = json.loads(message)
         loop = message['loop']
         pairlist = message['pairlist']
-        df = message['df']
         bookdepthdf = message['bookdepthdf']
+        df = message['df']
+
         df = df.replace("'",'"').replace("nan",'"a"')
         print(loop)
+        bookdepthdf = bookdepthdf.replace("'", '"').replace("nan", '"a"')
         result = loop_calculator(df,loop,pairlist,bookdepthdf)
         socket1.send(result)
 def isfloat(num):
