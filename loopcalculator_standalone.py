@@ -19,14 +19,13 @@ def main():
     socket1.connect("tcp://127.0.0.1:5556")
     while True:
         message = socket.recv().decode()
-        print(message)
         message = json.loads(message)
         loop = message['loop']
         pairlist = message['pairlist']
         df = message['df']
         bookdepthdf = message['bookdepthdf']
 
-        print(loop,pairlist,df,bookdepthdf)
+        print(loop)
         result = loop_calculator(df,loop,pairlist,bookdepthdf)
         socket1.send(result)
 def isfloat(num):
