@@ -1,4 +1,5 @@
 import datetime
+import json
 import math
 import traceback
 
@@ -19,7 +20,12 @@ def main():
     while True:
         message = socket.recv().decode()
         print(message)
-        loop,pairlist,df,bookdepthdf=message.split("|")
+        message = json.loads(message)
+        loop = message['loop']
+        pairlist = message['pairlist']
+        df = message['df']
+        bookdepthdf = message['bookdepthdf']
+
         print(loop,pairlist,df,bookdepthdf)
         result = loop_calculator(df,loop,pairlist,bookdepthdf)
         socket1.send(result)

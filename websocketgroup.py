@@ -101,7 +101,11 @@ class globalgraph():
                 gccounter+=1
                 #Thread(target=loop_calculator,args=(df,loop,pairlist,q,bookdepthdf)).start()
                 #push su queue
-                q.send((str(loop)+str(pairlist)+str(df)+str(bookdepthdf)).encode())
+                json_part = {'loop':str(loop),
+                             'pairlist':str(pairlist),
+                             'df':str(df),
+                             'bookdepthdf': str(bookdepthdf)}
+                q.send(str(json.dumps(json_part)).encode())
 
                 #self.loop_calculator(df,loop,pairlist,q,bookdepthdf)
             if gccounter>=self.GCCOUNTER_THRESHOLD:
