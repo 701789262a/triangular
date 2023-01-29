@@ -18,6 +18,7 @@ def main():
     socket1.connect("tcp://127.0.0.1:5556")
     while True:
         message = socket.recv().decode()
+        print(message)
         loop,pairlist,df,bookdepthdf=message.split("|")
         print(loop,pairlist,df,bookdepthdf)
         result = loop_calculator(df,loop,pairlist,bookdepthdf)
