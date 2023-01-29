@@ -37,7 +37,7 @@ def isfloat(num):
 
 
 def loop_calculator(df, loop, pairlist, bookdepthdf):
-    df = dict(df)
+    print(df)
     try:
         """['ETH', 'BTC', 'EUR']  =>  ["ETHBTC", "BTCEUR", "EURETH"]"""
         pairs = [[loop[0], loop[1]], [loop[1], loop[2]], [loop[2], loop[0]]]
