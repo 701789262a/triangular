@@ -11,11 +11,11 @@ def main():
     context = zmq.Context()
 
     socket = context.socket(zmq.REP)
-    socket.bind("tcp://localhost:5555")
+    socket.bind("tcp://127.0.0.1:5555")
     context1 = zmq.Context()
 
     socket1 = context1.socket(zmq.REQ)
-    socket1.connect("tcp://localhost:5556")
+    socket1.connect("tcp://127.0.0.1:5556")
     while True:
         message = socket.recv().decode()
         loop,pairlist,df,bookdepthdf=message.split("|")

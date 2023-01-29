@@ -57,7 +57,7 @@ class globalgraph():
         context = zmq.Context()
 
         socket = context.socket(zmq.REP)
-        socket.connect("tcp://localhost:5555")
+        socket.connect("tcp://127.0.0.1:5555")
         print(len(pairlist))
         bnb_wss_taker = Thread(target=
                                self.threaded_func,
