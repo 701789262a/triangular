@@ -11,11 +11,11 @@ bitcoin_trading_fee_promo = ['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'US
 def main():
     context = zmq.Context()
 
-    socket = context.socket(zmq.REP)
+    socket = context.socket(zmq.PULL)
     socket.bind("tcp://127.0.0.1:5555")
     context1 = zmq.Context()
 
-    socket1 = context1.socket(zmq.REQ)
+    socket1 = context1.socket(zmq.PUSH)
     socket1.connect("tcp://127.0.0.1:5556")
     while True:
         message = socket.recv().decode()

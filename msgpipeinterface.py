@@ -27,7 +27,7 @@ def pipe_server():
     os.system('python3 loopcalculator_standalone.py')
     time.sleep(1)
     context = zmq.Context()
-    socket = context.socket(zmq.REQ)
+    socket = context.socket(zmq.PULL)
     socket.connect("tcp://127.0.0.1:5556")
     with open("api.yaml") as f:
         y = yaml.safe_load(f)
