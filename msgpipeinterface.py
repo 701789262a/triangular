@@ -147,7 +147,9 @@ def instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, bo
 def executor_buy(client, pair, borrowable_qty):
     q = posixmq.Queue('/' + pair[0] + pair[1])
     for j in range(70):
-        if not q.qsize() > 0:
+        qlen = q.qsize()
+        print('[#] qlen %d' % qlen)
+        if not (qlen > 0):
             Thread(target=execute_trade, args=(client, pair, 'buy', borrowable_qty, j)).start()
             time.sleep(0.015)
 
@@ -155,7 +157,9 @@ def executor_buy(client, pair, borrowable_qty):
 def executor_sell(client, pair, borrowable_qty):
     q = posixmq.Queue('/' + pair[0] + pair[1])
     for j in range(70):
-        if not q.qsize() > 0:
+        qlen=q.qsize()
+        print('[#] qlen %d'%qlen)
+        if not (qlen > 0):
             Thread(target=execute_trade, args=(client, pair, 'sell', borrowable_qty, j)).start()
             time.sleep(0.015)
 

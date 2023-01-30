@@ -22,6 +22,7 @@ class globalgraph():
     bitcoin_trading_fee_promo =['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'USDCUSDT', 'USDPBUSD', 'USDPUSDT']
     GCCOUNTER_THRESHOLD=600000
     FIFO = '/looppipe12'
+    graph = {}  # grafo
     def main(self):
         gc.enable()
         with open("api.yaml") as f:
@@ -39,7 +40,6 @@ class globalgraph():
         print(len(exchange_info))
         tab = {} #dati
         bookdepthdf={} #bookdepth
-        graph = {} #grafo
         coinlist = self.returncoinlist(exchange_info)
         print(len(coinlist))
         time.sleep(5)
@@ -56,12 +56,12 @@ class globalgraph():
         print(len(pairlist))
         bnb_wss_taker = Thread(target=
                                self.threaded_func,
-                               args=(tab,pairlist, graph,bookdepthdf))
+                               args=(tab,pairlist,bookdepthdf))
         bnb_wss_taker.start()
         pairlist = []
         i = 0
         q=posixmq.Queue(self.FIFO)
-        Thread(target=self.grapher,args=(graph,)).start()
+        Thread(target=self.grapher,args=(self.graph,)).start()
         time.sleep(100)
         print(real_pair_listed)
         self.triangle_calculator(tab, real_pair_listed,q,bookdepthdf)
