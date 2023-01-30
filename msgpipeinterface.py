@@ -42,6 +42,7 @@ def pipe_server():
     print("pipe server")
     FIFO = '/looppipe12'
 
+
     print("waiting for client")
     q = posixmq.Queue(FIFO)
     p = posixmq.Queue("/orderpipe", maxsize=50)
