@@ -123,7 +123,9 @@ class globalgraph():
                             margin-= 0.00075
             print("Loop %s\t\tMargin %f%%"%(str(loop),margin*100))
             api_message_push = {'loop':pairs,'margin':round(margin*100,5),'prices':prices,'depths':depths,'timestamp':int(datetime.datetime.now().timestamp())}
-
+            if float(api_message_push['margin'])>0:
+                with open('timestamplog','a') as f:
+                    f.write(f"Timestamp rilevated on websocketgroup: {api_message_push['timestamp']}")
             q.put(str(api_message_push))
         except Exception as e:
             with open('culo.txt','a') as f:

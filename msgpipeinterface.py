@@ -58,6 +58,8 @@ def pipe_server():
                     resp, len(loop_list), q.qsize(), 1 / (sum(avgtime[-100:]) / 100)))
 
                 if float(dict_response['margin']) > 0:
+                    with open('timestamplog','a') as f:
+                        f.write(f"Timestamp rilevated on msgpipeinterface {datetime.datetime.now().timestamp()}")
                     pushqueue = ""
                     start = datetime.datetime.now().timestamp()
                     json_data = {
@@ -85,7 +87,8 @@ def pipe_server():
 
                         params['signature'] = hmac.new(y['secret'].encode('utf-8'), query_string.encode('utf-8'),
                                                        hashlib.sha256).hexdigest()
-
+                        with open('timestamplog', 'a') as f:
+                            f.write(f"Borrowed on {datetime.datetime.now().timestamp()}")
                         r = requests.post('https://api.binance.com/sapi/v1/loan/borrow', headers=headers, params=params)
                         if 'coin' not in dict(json.loads(r.text)):
                             t = Thread(target=instant_execute_trade,
@@ -127,6 +130,8 @@ def pipe_server():
 
 
 def instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, borrowable_qty):
+    with open('timestamplog', 'a') as f:
+        f.write(f"instant_execute_trade called on {datetime.datetime.now().timestamp()}")
     prices = dict_response['prices']
     k = 0
     for pair in dict_response['loop']:
