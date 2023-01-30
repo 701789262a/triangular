@@ -13,6 +13,7 @@ import yaml
 import numpy
 import requests
 import unicorn_binance_websocket_api
+import zmq
 from binance.client import Client
 import time
 from ipcqueue import posixmq
@@ -23,6 +24,11 @@ ORDER_MARGIN_PRICE_VOLATILITY = 0.03
 
 
 def pipe_server():
+    os.system('python3 loopcalculator_standalone.py')
+    time.sleep(1)
+    context = zmq.Context()
+    socket = context.socket(zmq.PULL)
+    socket.connect("tcp://127.0.0.1:5556")
     with open("api.yaml") as f:
         y = yaml.safe_load(f)
         f.close()
@@ -40,18 +46,17 @@ def pipe_server():
         lotsize[symbol['symbol'] + 'buy'] = int(symbol['quotePrecision'])
     loop_list = []
     print("pipe server")
-    FIFO = '/looppipe12'
 
 
     print("waiting for client")
-    q = posixmq.Queue(FIFO)
+    q = socket
     p = posixmq.Queue("/orderpipe", maxsize=50)
     try:
         print('starting read')
         while True:
             try:
                 start = datetime.datetime.now().timestamp()
-                resp = str(q.get()).strip('\n')
+                resp = str(q.recv().decode()).strip('\n')
                 dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])
