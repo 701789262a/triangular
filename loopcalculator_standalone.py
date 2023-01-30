@@ -29,7 +29,8 @@ def main():
         print(loop)
         bookdepthdf = bookdepthdf.replace("'", '"').replace("nan", '"a"')
         result = loop_calculator(df,loop,pairlist,bookdepthdf)
-        socket1.send(result)
+        print(result)
+        socket1.send_stirng(result)
 def isfloat(num):
         try:
             float(num)
