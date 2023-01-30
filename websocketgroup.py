@@ -38,17 +38,17 @@ class globalgraph():
         print(len(exchange_info))
         exchange_info = [item for item in exchange_info if 'EUR' not in item['symbol']]
         print(len(exchange_info))
-        tab = {} #dati
-        bookdepthdf={} #bookdepth
+        self.tab = {} #dati
+        self.bookdepthdf={} #bookdepth
         coinlist = self.returncoinlist(exchange_info)
         print(len(coinlist))
         time.sleep(5)
         for coin1 in coinlist:
-            tab[coin1] = {}
-            bookdepthdf[coin1] = {}
+            self.tab[coin1] = {}
+            self.bookdepthdf[coin1] = {}
             for coin2 in coinlist:
-                tab[coin1][coin2] = numpy.NAN
-                bookdepthdf[coin1][coin2] = numpy.NAN
+                self.tab[coin1][coin2] = numpy.NAN
+                self.bookdepthdf[coin1][coin2] = numpy.NAN
                 pairlist.append(coin1 + '.' + coin2)
 
         i = 0
@@ -56,15 +56,15 @@ class globalgraph():
         print(len(pairlist))
         bnb_wss_taker = Thread(target=
                                self.threaded_func,
-                               args=(tab,pairlist,bookdepthdf))
+                               args=(pairlist,self.bookdepthdf))
         bnb_wss_taker.start()
         pairlist = []
         i = 0
-        q=posixmq.Queue(self.FIFO)
+        self.q=posixmq.Queue(self.FIFO)
         Thread(target=self.grapher,args=(self.graph,)).start()
         time.sleep(100)
         print(real_pair_listed)
-        self.triangle_calculator(tab, real_pair_listed,q,bookdepthdf)
+        self.triangle_calculator( real_pair_listed)
 
 
     def returncoinlist(self,exchangeinfo):
@@ -74,13 +74,8 @@ class globalgraph():
             partial_list.append(pair['quoteAsset'])
         return list(set(partial_list))
 
-    def triangle_calculator(self,df,pairlist,q,bookdepthdf):
-        gccounter=0
+    def triangle_calculator(self,pairlist):
         while True:
-            if q.qsize() > 5:
-                print('[!] Queue getting full! Waiting 2 secs...')
-                time.sleep(2)
-                continue
             print('graph2',self.graph)
             if not globalgraph.global_graph or globalgraph.global_graph!=self.graph:
                 print("[!] Redrawing graph...")
@@ -97,11 +92,8 @@ class globalgraph():
             print("loops max 3 found",closed_loop_list)
             #loop_calculator(df,closed_loop_list[0],pairlist,handle)
             for loop in closed_loop_list:
-                gccounter+=1
                 #Thread(target=loop_calculator,args=(df,loop,pairlist,q,bookdepthdf)).start()
-                self.loop_calculator(df,loop,pairlist,q,bookdepthdf)
-            if gccounter>=self.GCCOUNTER_THRESHOLD:
-                gc.collect()
+                self.loop_calculator(self.tab,loop,pairlist,self.q,self.bookdepthdf)
 
     def loop_calculator(self,df,loop,pairlist,q,bookdepthdf):
         try:
@@ -170,7 +162,7 @@ class globalgraph():
         api_manager.create_stream(channels=['bookTicker'],markets=stream)
 
 
-    def threaded_func(self,df, pairlist,bookdepthdf):
+    def threaded_func(self, pairlist,bookdepthdf):
         print('Starting WSS connection')
         binance_websocket_api_manager = unicorn_binance_websocket_api.BinanceWebSocketApiManager(exchange="binance.com")
         withoutpoint_topoint = dict()
@@ -187,10 +179,10 @@ class globalgraph():
                     if 'result' not in res_bnb:
                         # conn.sendall(res_bnb.encode())
                         # print(res_bnb)
-                        df[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]][
+                        self.tab[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]][
                             withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
                                 1]] = json.loads(res_bnb)['data']['a']
-                        df[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[1]][
+                        self.tab[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[1]][
                             withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
                                 0]] = json.loads(res_bnb)['data']['b']
                         bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]][
