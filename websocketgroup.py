@@ -3,8 +3,6 @@ import json
 import queue
 import time
 import traceback
-
-import zmq
 from ipcqueue import posixmq
 import math
 import matplotlib.pyplot as plt
@@ -24,7 +22,6 @@ class globalgraph():
     bitcoin_trading_fee_promo =['BUSDUSDT', 'TUSDBUSD', 'TUSDUSDT', 'USDCBUSD', 'USDCUSDT', 'USDPBUSD', 'USDPUSDT']
     GCCOUNTER_THRESHOLD=600000
     FIFO = '/looppipe12'
-    graph = {}  # grafo
     def main(self):
         gc.enable()
         with open("api.yaml") as f:
@@ -42,6 +39,7 @@ class globalgraph():
         print(len(exchange_info))
         tab = {} #dati
         bookdepthdf={} #bookdepth
+        graph = {} #grafo
         coinlist = self.returncoinlist(exchange_info)
         print(len(coinlist))
         time.sleep(5)
@@ -54,22 +52,19 @@ class globalgraph():
                 pairlist.append(coin1 + '.' + coin2)
 
         i = 0
-        context = zmq.Context()
 
-        socket = context.socket(zmq.PUSH)
-        socket.connect("tcp://127.0.0.1:5555")
         print(len(pairlist))
         bnb_wss_taker = Thread(target=
                                self.threaded_func,
-                               args=(tab,pairlist,bookdepthdf))
+                               args=(tab,pairlist, graph,bookdepthdf))
         bnb_wss_taker.start()
         pairlist = []
         i = 0
         q=posixmq.Queue(self.FIFO)
-        Thread(target=self.grapher,args=(self.graph,)).start()
+        Thread(target=self.grapher,args=(graph,)).start()
         time.sleep(100)
         print(real_pair_listed)
-        self.triangle_calculator(tab, real_pair_listed,socket,bookdepthdf)
+        self.triangle_calculator(tab, real_pair_listed,q,bookdepthdf)
 
 
     def returncoinlist(self,exchangeinfo):
@@ -82,6 +77,10 @@ class globalgraph():
     def triangle_calculator(self,df,pairlist,q,bookdepthdf):
         gccounter=0
         while True:
+            if q.qsize() > 5:
+                print('[!] Queue getting full! Waiting 2 secs...')
+                time.sleep(2)
+                continue
             print('graph2',self.graph)
             if not globalgraph.global_graph or globalgraph.global_graph!=self.graph:
                 print("[!] Redrawing graph...")
@@ -100,17 +99,43 @@ class globalgraph():
             for loop in closed_loop_list:
                 gccounter+=1
                 #Thread(target=loop_calculator,args=(df,loop,pairlist,q,bookdepthdf)).start()
-                #push su queue
-                json_part = {'loop':loop,
-                             'pairlist':pairlist,
-                             'df':str(df),
-                             'bookdepthdf': str(bookdepthdf)}
-                q.send(str(json.dumps(json_part)).encode())
-
-                #self.loop_calculator(df,loop,pairlist,q,bookdepthdf)
+                self.loop_calculator(df,loop,pairlist,q,bookdepthdf)
             if gccounter>=self.GCCOUNTER_THRESHOLD:
                 gc.collect()
 
+    def loop_calculator(self,df,loop,pairlist,q,bookdepthdf):
+        try:
+            """['ETH', 'BTC', 'EUR']  =>  ["ETHBTC", "BTCEUR", "EURETH"]"""
+            pairs = [[loop[0],loop[1]],[loop[1],loop[2]],[loop[2],loop[0]]]
+            prices=[]
+            depths=[]
+            margin =0.0
+            for pair in pairs:
+                if self.isfloat(df[pair[0]][pair[1]]):
+                    print("Testing",pair[0]+pair[1])
+                    if pair[0]+pair[1] in pairlist:
+                        margin += math.log(float(df[pair[1]][pair[0]]))
+                        depths.append(bookdepthdf[pair[1]][pair[0]])
+                        prices.append(df[pair[1]][pair[0]])
+                        if pair[0]+pair[1] in self.zero_trading_fee_promo or pair[1]+pair[0] in self.zero_trading_fee_promo or pair[0]+pair[1] in self.bitcoin_trading_fee_promo or pair[1]+pair[0] in self.bitcoin_trading_fee_promo:
+                            margin-= 0
+                        else:
+                            margin-= 0.00075
+                    else:
+                        margin += -math.log(float(df[pair[1]][pair[0]]))
+                        depths.append(bookdepthdf[pair[1]][pair[0]])
+                        prices.append(df[pair[1]][pair[0]])
+                        if pair[0]+pair[1] in self.zero_trading_fee_promo or pair[1]+pair[0] in self.zero_trading_fee_promo or pair[0]+pair[1] in self.bitcoin_trading_fee_promo or pair[1]+pair[0] in self.bitcoin_trading_fee_promo:
+                            margin-= 0
+                        else:
+                            margin-= 0.00075
+            print("Loop %s\t\tMargin %f%%"%(str(loop),margin*100))
+            api_message_push = {'loop':pairs,'margin':round(margin*100,5),'prices':prices,'depths':depths,'timestamp':int(datetime.datetime.now().timestamp())}
+
+            q.put(str(api_message_push))
+        except Exception as e:
+            with open('culo.txt','a') as f:
+                f.write(str(traceback.format_exc()))
 
     def pair_list_slimmer(self,pair_list, pair):
         new_pair_list = []
@@ -135,6 +160,9 @@ class globalgraph():
             networkx.draw_networkx(G,labels=labels)
             DG = DiGraph(G)
             plt.show()
+
+
+
 
     def subscribe_wss(self,api_manager, pairlist):
         stream=[item.lower().replace('.','') for item in pairlist]

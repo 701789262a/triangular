@@ -13,7 +13,6 @@ import yaml
 import numpy
 import requests
 import unicorn_binance_websocket_api
-import zmq
 from binance.client import Client
 import time
 from ipcqueue import posixmq
@@ -24,11 +23,6 @@ ORDER_MARGIN_PRICE_VOLATILITY = 0.03
 
 
 def pipe_server():
-    os.system('python3 loopcalculator_standalone.py')
-    time.sleep(1)
-    context = zmq.Context()
-    socket = context.socket(zmq.PULL)
-    socket.connect("tcp://127.0.0.1:5556")
     with open("api.yaml") as f:
         y = yaml.safe_load(f)
         f.close()
@@ -46,17 +40,17 @@ def pipe_server():
         lotsize[symbol['symbol'] + 'buy'] = int(symbol['quotePrecision'])
     loop_list = []
     print("pipe server")
-
+    FIFO = '/looppipe12'
 
     print("waiting for client")
-    q = socket
+    q = posixmq.Queue(FIFO)
     p = posixmq.Queue("/orderpipe", maxsize=50)
     try:
         print('starting read')
         while True:
             try:
                 start = datetime.datetime.now().timestamp()
-                resp = str(q.recv().decode()).strip('\n')
+                resp = str(q.get()).strip('\n')
                 dict_response = dict(eval(resp))
                 if not dict_response['loop'] in loop_list:
                     loop_list.append(dict_response['loop'])
@@ -153,9 +147,7 @@ def instant_execute_trade(client, real_pair_listed, dict_response, pushqueue, bo
 def executor_buy(client, pair, borrowable_qty):
     q = posixmq.Queue('/' + pair[0] + pair[1])
     for j in range(70):
-        qlen = q.qsize()
-        print('[#] qlen %d' % qlen)
-        if not (qlen > 0):
+        if not q.qsize() > 0:
             Thread(target=execute_trade, args=(client, pair, 'buy', borrowable_qty, j)).start()
             time.sleep(0.015)
 
@@ -163,9 +155,7 @@ def executor_buy(client, pair, borrowable_qty):
 def executor_sell(client, pair, borrowable_qty):
     q = posixmq.Queue('/' + pair[0] + pair[1])
     for j in range(70):
-        qlen=q.qsize()
-        print('[#] qlen %d'%qlen)
-        if not (qlen > 0):
+        if not q.qsize() > 0:
             Thread(target=execute_trade, args=(client, pair, 'sell', borrowable_qty, j)).start()
             time.sleep(0.015)
 
