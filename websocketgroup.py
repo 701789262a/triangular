@@ -56,7 +56,7 @@ class globalgraph():
         print(len(pairlist))
         bnb_wss_taker = Thread(target=
                                self.threaded_func,
-                               args=(pairlist,self.bookdepthdf))
+                               args=(pairlist,))
         bnb_wss_taker.start()
         pairlist = []
         i = 0
