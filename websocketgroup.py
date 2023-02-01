@@ -164,7 +164,7 @@ class globalgraph():
         api_manager.create_stream(channels=['bookTicker'],markets=stream)
 
 
-    def threaded_func(self, pairlist,bookdepthdf):
+    def threaded_func(self, pairlist):
         print('Starting WSS connection')
         binance_websocket_api_manager = unicorn_binance_websocket_api.BinanceWebSocketApiManager(exchange="binance.com")
         withoutpoint_topoint = dict()
@@ -181,18 +181,6 @@ class globalgraph():
                     if 'result' not in res_bnb:
                         # conn.sendall(res_bnb.encode())
                         # print(res_bnb)
-                        self.tab[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]][
-                            withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
-                                1]] = json.loads(res_bnb)['data']['a']
-                        self.tab[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[1]][
-                            withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
-                                0]] = json.loads(res_bnb)['data']['b']
-                        bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]][
-                            withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
-                                1]] = json.loads(res_bnb)['data']['A']
-                        bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[1]][
-                            withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
-                                0]] = json.loads(res_bnb)['data']['B']
                         try:
                             if not self.graph[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]].__contains__(
                                     withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
@@ -202,6 +190,20 @@ class globalgraph():
                                         1])
                         except:
                             self.graph[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]] = []
+
+                        self.tab[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]][
+                            withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
+                                1]] = json.loads(res_bnb)['data']['a']
+                        self.tab[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[1]][
+                            withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
+                                0]] = json.loads(res_bnb)['data']['b']
+                        self.bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]][
+                            withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
+                                1]] = json.loads(res_bnb)['data']['A']
+                        self.bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[1]][
+                            withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
+                                0]] = json.loads(res_bnb)['data']['B']
+
                 else:
                     continue
             except:
