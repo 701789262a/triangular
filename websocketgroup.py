@@ -56,7 +56,7 @@ class globalgraph():
         print(len(pairlist))
         bnb_wss_taker = Thread(target=
                                self.threaded_func,
-                               args=(pairlist))
+                               args=(pairlist,self.bookdepthdf))
         bnb_wss_taker.start()
         pairlist = []
         i = 0
@@ -164,7 +164,7 @@ class globalgraph():
         api_manager.create_stream(channels=['bookTicker'],markets=stream)
 
 
-    def threaded_func(self, pairlist):
+    def threaded_func(self, pairlist,bookdepthdf):
         print('Starting WSS connection')
         binance_websocket_api_manager = unicorn_binance_websocket_api.BinanceWebSocketApiManager(exchange="binance.com")
         withoutpoint_topoint = dict()
@@ -187,10 +187,10 @@ class globalgraph():
                         self.tab[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[1]][
                             withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
                                 0]] = json.loads(res_bnb)['data']['b']
-                        self.bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]][
+                        bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]][
                             withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
                                 1]] = json.loads(res_bnb)['data']['A']
-                        self.bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[1]][
+                        bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[1]][
                             withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
                                 0]] = json.loads(res_bnb)['data']['B']
                         try:
