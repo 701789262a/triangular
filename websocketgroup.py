@@ -56,7 +56,7 @@ class globalgraph():
         print(len(pairlist))
         bnb_wss_taker = Thread(target=
                                self.threaded_func,
-                               args=(pairlist,self.bookdepthdf))
+                               args=(pairlist))
         bnb_wss_taker.start()
         pairlist = []
         i = 0
@@ -89,13 +89,13 @@ class globalgraph():
                 globalgraph.global_circular=circular
             else:
                 closed_loop_list = [loop for loop in globalgraph.global_circular if len(loop) == 3]
-            print("loops max 3 found",closed_loop_list)
+            print(f"loops max 3 found{closed_loop_list} length loop {len(closed_loop_list)}")
             #loop_calculator(df,closed_loop_list[0],pairlist,handle)
             for loop in closed_loop_list:
                 #Thread(target=loop_calculator,args=(df,loop,pairlist,q,bookdepthdf)).start()
-                self.loop_calculator(self.tab,loop,pairlist,self.q,self.bookdepthdf)
+                self.loop_calculator(loop,pairlist)
 
-    def loop_calculator(self,df,loop,pairlist,q,bookdepthdf):
+    def loop_calculator(self,loop,pairlist):
         try:
             """['ETH', 'BTC', 'EUR']  =>  ["ETHBTC", "BTCEUR", "EURETH"]"""
             pairs = [[loop[0],loop[1]],[loop[1],loop[2]],[loop[2],loop[0]]]
@@ -103,20 +103,20 @@ class globalgraph():
             depths=[]
             margin =0.0
             for pair in pairs:
-                if self.isfloat(df[pair[0]][pair[1]]):
-                    print("Testing",pair[0]+pair[1])
+                if self.isfloat(self.tab[pair[0]][pair[1]]):
+                    #print("Testing",pair[0]+pair[1])
                     if pair[0]+pair[1] in pairlist:
-                        margin += math.log(float(df[pair[1]][pair[0]]))
-                        depths.append(bookdepthdf[pair[1]][pair[0]])
-                        prices.append(df[pair[1]][pair[0]])
+                        margin += math.log(float(self.tab[pair[1]][pair[0]]))
+                        depths.append(self.bookdepthdf[pair[1]][pair[0]])
+                        prices.append(self.tab[pair[1]][pair[0]])
                         if pair[0]+pair[1] in self.zero_trading_fee_promo or pair[1]+pair[0] in self.zero_trading_fee_promo or pair[0]+pair[1] in self.bitcoin_trading_fee_promo or pair[1]+pair[0] in self.bitcoin_trading_fee_promo:
                             margin-= 0
                         else:
                             margin-= 0.00075
                     else:
-                        margin += -math.log(float(df[pair[1]][pair[0]]))
-                        depths.append(bookdepthdf[pair[1]][pair[0]])
-                        prices.append(df[pair[1]][pair[0]])
+                        margin += -math.log(float(self.tab[pair[1]][pair[0]]))
+                        depths.append(self.bookdepthdf[pair[1]][pair[0]])
+                        prices.append(self.tab[pair[1]][pair[0]])
                         if pair[0]+pair[1] in self.zero_trading_fee_promo or pair[1]+pair[0] in self.zero_trading_fee_promo or pair[0]+pair[1] in self.bitcoin_trading_fee_promo or pair[1]+pair[0] in self.bitcoin_trading_fee_promo:
                             margin-= 0
                         else:
@@ -126,7 +126,7 @@ class globalgraph():
             if float(api_message_push['margin'])>0:
                 with open('timestamplog','a') as f:
                     f.write(f"Timestamp rilevated on websocketgroup: {datetime.datetime.now().timestamp()}\n")
-            q.put(str(api_message_push))
+            self.q.put(str(api_message_push))
         except Exception as e:
             with open('culo.txt','a') as f:
                 f.write(str(traceback.format_exc()))
@@ -164,7 +164,7 @@ class globalgraph():
         api_manager.create_stream(channels=['bookTicker'],markets=stream)
 
 
-    def threaded_func(self, pairlist,bookdepthdf):
+    def threaded_func(self, pairlist):
         print('Starting WSS connection')
         binance_websocket_api_manager = unicorn_binance_websocket_api.BinanceWebSocketApiManager(exchange="binance.com")
         withoutpoint_topoint = dict()
@@ -187,10 +187,10 @@ class globalgraph():
                         self.tab[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[1]][
                             withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
                                 0]] = json.loads(res_bnb)['data']['b']
-                        bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]][
+                        self.bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[0]][
                             withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
                                 1]] = json.loads(res_bnb)['data']['A']
-                        bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[1]][
+                        self.bookdepthdf[withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[1]][
                             withoutpoint_topoint[json.loads(res_bnb)['data']['s']].split('.')[
                                 0]] = json.loads(res_bnb)['data']['B']
                         try:
